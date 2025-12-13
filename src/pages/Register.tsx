@@ -13,8 +13,9 @@ const Register = () => {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         const success = await register(name, email, password);
-
-        if (!success) {
+        if (success) {
+            window.location.href = "/chat";
+        } else {
             setError("Could not register. Try another email.");
         }
     };

@@ -11,12 +11,17 @@ const Login = () => {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+
         const success = await login(email, password);
 
-        if (!success) {
+        if (success) {
+            window.location.href = "/chat";
+        } else {
             setError("Invalid email or password");
         }
+
     };
+    
 
     return (
         <div className="h-screen flex items-center justify-center bg-gray-100">
