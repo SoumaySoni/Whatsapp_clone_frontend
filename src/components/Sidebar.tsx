@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getUserChats } from "../lib/chatApi";
+import { useChat } from "../context/ChatContext";
 
 interface Chat {
     id: string;
@@ -14,11 +15,12 @@ const Sidebar = () => {
 
     const [chats, setChats] = useState<Chat[]>([]);
     const [loading, setLoading] = useState(true);
+    const { selectedChatId, setSelectedChatId } = useChat();
 
     useEffect(() => {
         if (!token) return; // don't run until token exists
 
-        console.log("Token detected in Sidebar:", token);
+        // console.log("Token detected in Sidebar:", token);
 
         const loadChats = async () => {
             try {
@@ -60,7 +62,8 @@ const Sidebar = () => {
                     return (
                         <div
                             key={chat.id}
-                            className="p-4 border-b hover:bg-gray-100 cursor-pointer"
+                            onClick={() => setSelectedChatId(chat.id)}
+                            className={`p-4 border-b cursor-pointer ${selectedChatId === chat.id ? "bg-gray-200" : "hover:bg-gray-100"}`}
                         >
                             <p className="font-medium">{otherUser.name}</p>
                             <p className="text-sm text-gray-600">
