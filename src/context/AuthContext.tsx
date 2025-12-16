@@ -8,11 +8,16 @@ interface User {
     email: string;
 }
 
+interface AuthResponse {
+  success: boolean;
+  user: User | null;
+}
+
 interface AuthContextType {
-    user: User | null;
-    token: string | null;
-    login: (email: string, password: string) => Promise<boolean>;
-    register: (name: string, email: string, password: string) => Promise<boolean>;
+  user: User | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  register: (name: string, email: string, password: string) => Promise<AuthResponse>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -42,13 +47,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(res.data.user);
             setToken(res.data.token);
 
-            // SAVE to localStorage
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("user", JSON.stringify(res.data.user));
 
-            return true;
+            return { success: true, user: res.data.user };
         } catch {
-            return false;
+            return { success: false, user: null };
         }
     };
 
@@ -59,15 +63,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(res.data.user);
             setToken(res.data.token);
 
-            // SAVE to localStorage
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("user", JSON.stringify(res.data.user));
 
-            return true;
+            return { success: true, user: res.data.user };
         } catch {
-            return false;
+            return { success: false, user: null };
         }
     };
+
     if (loadingAuth) return null; // or a loader
 
     return (

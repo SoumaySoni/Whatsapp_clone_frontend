@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useChat } from "../context/ChatContext";
 import { useAuth } from "../context/AuthContext";
 import { getMessages } from "../lib/messageApi";
+import { api } from "../lib/api";
+import { socket } from "../lib/socket";
 
 interface Message {
     id: string;
@@ -15,6 +17,7 @@ const ChatWindow = () => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
+    const [newMessage, setNewMessage] = useState("");
 
     useEffect(() => {
         if (!selectedChatId || !token) return;
@@ -31,6 +34,16 @@ const ChatWindow = () => {
             }
         };
 
+        socket.on("receiveMessage", (msg) => {
+            if (msg.chatId === selectedChatId) {
+                setMessages((prev) => [...prev, msg]);
+            }
+        });
+
+        return () => {
+            socket.off("receiveMessage");
+        };
+
         loadMessages();
     }, [selectedChatId, token]);
 
@@ -41,6 +54,37 @@ const ChatWindow = () => {
             </div>
         );
     }
+
+    const handleSend = async () => {
+        if (!newMessage.trim() || !selectedChatId || !token) return;
+
+        // 1. Save message in DB
+        const res = await api.post(
+            "/messages/send",
+            {
+                chatId: selectedChatId,
+                content: newMessage,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        const savedMessage = res.data.message;
+
+        // 2. Send real-time event
+        socket.emit("sendMessage", {
+            chatId: selectedChatId,
+            message: savedMessage,
+        });
+
+        // 3. Add instantly to UI
+        setMessages((prev) => [...prev, savedMessage]);
+
+        setNewMessage("");
+    };
 
     return (
         <div className="h-full flex flex-col">
@@ -65,13 +109,20 @@ const ChatWindow = () => {
             </div>
 
             {/* Input box will be added next */}
-            <div className="p-4 border-t bg-white">
+            <div className="p-4 border-t bg-white flex items-center gap-2">
                 <input
                     type="text"
-                    disabled
-                    placeholder="Message sending coming next..."
-                    className="w-full border px-4 py-2 rounded-lg outline-none"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 border px-4 py-2 rounded-lg outline-none"
                 />
+                <button
+                    onClick={handleSend}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                >
+                    Send
+                </button>
             </div>
         </div>
     );

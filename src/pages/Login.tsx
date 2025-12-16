@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { socket } from "../lib/socket";
 
 const Login = () => {
     const { login } = useAuth();
@@ -12,9 +13,11 @@ const Login = () => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const success = await login(email, password);
+        const { success, user } = await login(email, password);
 
-        if (success) {
+        if (success && user) {
+            socket.connect();
+            socket.emit("join", user.id); // join personal room
             window.location.href = "/chat";
         } else {
             setError("Invalid email or password");

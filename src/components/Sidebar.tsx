@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getUserChats } from "../lib/chatApi";
 import { useChat } from "../context/ChatContext";
+import { socket } from "../lib/socket";
 
 interface Chat {
     id: string;
@@ -62,7 +63,10 @@ const Sidebar = () => {
                     return (
                         <div
                             key={chat.id}
-                            onClick={() => setSelectedChatId(chat.id)}
+                            onClick={() => {
+                                setSelectedChatId(chat.id);
+                                socket.emit("joinChat", chat.id);
+                            }}
                             className={`p-4 border-b cursor-pointer ${selectedChatId === chat.id ? "bg-gray-200" : "hover:bg-gray-100"}`}
                         >
                             <p className="font-medium">{otherUser.name}</p>

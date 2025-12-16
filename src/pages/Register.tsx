@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { socket } from "../lib/socket";
 
 const Register = () => {
     const { register } = useAuth();
@@ -12,8 +13,11 @@ const Register = () => {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        const success = await register(name, email, password);
-        if (success) {
+        const { success, user } = await register(name, email, password);
+
+        if (success && user) {
+            socket.connect();
+            socket.emit("join", user.id);
             window.location.href = "/chat";
         } else {
             setError("Could not register. Try another email.");
